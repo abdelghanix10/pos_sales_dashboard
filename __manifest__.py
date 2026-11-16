@@ -1,33 +1,26 @@
 {
     'name': "POS Sales Dashboard",
-    'summary': "Advanced POS dashboard with analytics, charts, and insights",
-
-    'description': """
-        This module provides a modern POS Sales Dashboard inside the Point of Sale interface.
-
-        Features:
-        - Sales analytics
-        - Top products
-        - Top customers
-        - Top POS categories
-        - Store performance
-        - Active POS sessions
-        - Interactive charts (bar & pie)
-        - Session-based filtering
-        - Today, Week, Month, Year filters
-        - Notifications for new orders
-        - Store sales comparison (month & year)
-        - Top selling product history
-        - Payment methods overview
-        - Dark and light mode support
-
-        Designed for better business decision-making directly from POS.
-    """,
-    'version': "19.0.3.0",
+    'version': "20.0.4.0.0",
     'sequence': 10,
     'author': "Vishnu Sasikumar",
-    'category': 'Point of Sale',
+    'category': 'Sales/Point of Sale',
+    'summary': "Advanced POS dashboard with analytics, charts, trends, and insights",
+    'description': """
+POS Sales Dashboard (Odoo 20)
+=============================
+Provides a modern POS Sales Dashboard inside the Point of Sale backend:
+- Real-time sales analytics, Average Order Value, and Period-over-Period growth %
+- Hourly & Daily Sales Trend line chart
+- Top Selling Products, Top Customers, Top POS Categories, and Top Cashiers
+- Store Performance & Period Comparison charts (Bar, Pie & Line)
+- Active POS Sessions & Payment Methods overview
+- CSV Export, Notifications for new orders, and Dark/Light mode support
+    """,
     'depends': ["point_of_sale"],
+    'data': [
+        "security/ir.access.csv",
+        "views/dashboard_view.xml",
+    ],
     'assets': {
         'web.assets_backend': [
             "https://cdn.jsdelivr.net/npm/chart.js",
@@ -36,9 +29,6 @@
             "pos_sales_dashboard/static/src/css/pos_dashboard.css",
         ],
     },
-    'data': [
-        "views/dashboard_view.xml",
-    ],
     'images': ['static/description/banner.png'],
     'license': "LGPL-3",
     'installable': True,

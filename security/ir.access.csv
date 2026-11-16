@@ -1,0 +1,3 @@
+id,name,model_id,group_id/id,operation,domain
+access_pos_sales_dashboard_user,pos.sales.dashboard.user,pos.sales.dashboard,point_of_sale.group_pos_user,r,
+access_pos_sales_dashboard_manager,pos.sales.dashboard.manager,pos.sales.dashboard,point_of_sale.group_pos_manager,crud,
