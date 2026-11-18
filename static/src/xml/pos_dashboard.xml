@@ -3,37 +3,65 @@
     <t t-name="pos_sales_dashboard.Template">
         <div class="o_pos_dashboard container-fluid" t-attf-class="{{ this.state.dark_mode ? 'dark-mode' : '' }}">
 
-            <!-- ================= TOP USER ROW ================= -->
-            <div class="top-user-bar">
-                <div class="dashboard-datetime">
-                    <i class="oi" data-icon="schedule"/>
-                    <span t-out="this.state.current_datetime"/>
+            <!-- ================= TOP HEADER BAR ================= -->
+            <div class="dashboard-topbar">
+                <div class="topbar-brand">
+                    <div class="brand-icon">
+                        <i class="oi" data-icon="stacked_bar_chart"/>
+                    </div>
+                    <div>
+                        <h2 class="dashboard-title">POS Sales Dashboard</h2>
+                        <div class="dashboard-datetime">
+                            <i class="oi" data-icon="schedule"/>
+                            <span t-out="this.state.current_datetime"/>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="top-user-right">
+                <div class="topbar-actions">
+                    <!-- STORE SELECTOR -->
+                    <div class="session-filter">
+                        <i class="oi session-icon" data-icon="storefront"/>
+                        <select class="session-dropdown" t-on-change="(ev) => this.changeConfig(ev)">
+                            <option t-att-selected="this.state.selected_config === null" value="">
+                                All Stores
+                            </option>
+                            <t t-foreach="this.state.all_configs" t-as="c" t-key="c.id">
+                                <option t-att-value="c.id" t-att-selected="this.state.selected_config === c.id">
+                                    <t t-out="c.name"/>
+                                </option>
+                            </t>
+                        </select>
+                    </div>
+
                     <!-- REFRESH & EXPORT -->
-                    <button class="theme-btn" title="Refresh Dashboard" t-on-click="() => this.loadDashboard()">
-                        <i class="oi" data-icon="refresh"/>
+                    <button class="icon-action-btn" title="Refresh Dashboard" t-on-click="() => this.loadDashboard()">
+                        <i class="oi" data-icon="autorenew"/>
                     </button>
-                    <button class="theme-btn" title="Export Top Products CSV" t-on-click="() => this.exportProductsCSV()">
+                    <button class="icon-action-btn" title="Export Top Products CSV" t-on-click="() => this.exportProductsCSV()">
                         <i class="oi" data-icon="download"/>
                     </button>
 
-                    <!-- NOTIFICATION -->
-                    <div class="notification-icon">
-                        <i class="oi" data-icon="notifications" t-on-click="() => this.toggleNotifications()"/>
-                        <span class="notification-badge" t-if="this.state.notification_count">
-                            <t t-out="this.state.notification_count"/>
-                        </span>
+                    <!-- NOTIFICATIONS -->
+                    <div class="notification-wrapper">
+                        <button class="icon-action-btn" title="Notifications" t-on-click="() => this.toggleNotifications()">
+                            <i class="oi" data-icon="notifications"/>
+                            <span class="notification-badge" t-if="this.state.notification_count">
+                                <t t-out="this.state.notification_count"/>
+                            </span>
+                        </button>
 
                         <div class="notification-dropdown" t-if="this.state.showNotifications">
                             <div class="notification-title">
-                                Latest Orders
+                                <span>Latest Orders</span>
                                 <span class="mark-read" t-on-click="() => this.markNotificationsRead()">
                                     Mark as read
                                 </span>
                             </div>
                             <div class="notification-list">
+                                <t t-if="!this.state.notifications.length">
+                                    <div class="empty-notification">No new orders</div>
+                                </t>
                                 <t t-foreach="this.state.notifications" t-as="n" t-key="n[0]">
                                     <div class="notification-item">
                                         <span class="order-ref">
@@ -49,42 +77,29 @@
                     </div>
 
                     <!-- DARK MODE TOGGLE -->
-                    <div class="theme-toggle">
-                        <button class="theme-btn" t-on-click="() => this.toggleTheme()">
-                            <t t-if="this.state.dark_mode">
-                                <i class="oi sun-icon" data-icon="light_mode"/>
-                            </t>
-                            <t t-else="">
-                                <i class="oi moon-icon" data-icon="dark_mode"/>
-                            </t>
-                        </button>
-                    </div>
+                    <button class="icon-action-btn" title="Toggle Theme" t-on-click="() => this.toggleTheme()">
+                        <t t-if="this.state.dark_mode">
+                            <i class="oi sun-icon" data-icon="light_mode"/>
+                        </t>
+                        <t t-else="">
+                            <i class="oi moon-icon" data-icon="dark_mode"/>
+                        </t>
+                    </button>
                 </div>
             </div>
 
-            <!-- ================= SECOND HEADER ================= -->
-            <div class="dashboard-header">
-                <h2 class="dashboard-title">POS Analytics</h2>
-
-                <div class="session-filter">
-                    <i class="oi session-icon" data-icon="store"/>
-                    <select class="session-dropdown" t-on-change="(ev) => this.changeConfig(ev)">
-                        <option t-att-selected="this.state.selected_config === null" value="">
-                            All Stores
-                        </option>
-                        <t t-foreach="this.state.all_configs" t-as="c" t-key="c.id">
-                            <option t-att-value="c.id" t-att-selected="this.state.selected_config === c.id">
-                                <t t-out="c.name"/>
-                            </option>
-                        </t>
-                    </select>
-                </div>
-
-                <div class="filter-buttons" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <!-- ================= FILTER TOOLBAR ================= -->
+            <div class="filter-toolbar">
+                <div class="filter-pills">
                     <button t-on-click="(ev) => this.changeFilter(ev)"
                             data-filter="today"
                             t-att-class="'filter-btn ' + (this.state.filter === 'today' ? 'active' : '')">
                         Today
+                    </button>
+                    <button t-on-click="(ev) => this.changeFilter(ev)"
+                            data-filter="yesterday"
+                            t-att-class="'filter-btn ' + (this.state.filter === 'yesterday' ? 'active' : '')">
+                        Yesterday
                     </button>
                     <button t-on-click="(ev) => this.changeFilter(ev)"
                             data-filter="week"
@@ -101,57 +116,100 @@
                             t-att-class="'filter-btn ' + (this.state.filter === 'year' ? 'active' : '')">
                         This Year
                     </button>
+                </div>
 
-                    <div class="custom-date-filter" style="display: flex; align-items: center; gap: 5px;">
-                        <span>From:</span>
-                        <input type="date" class="date-input" t-model="this.state.custom_date_from" t-on-change="(ev) => this.onCustomDateChange(ev)" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;"/>
-                        <span>To:</span>
-                        <input type="date" class="date-input" t-model="this.state.custom_date_to" t-on-change="(ev) => this.onCustomDateChange(ev)" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;"/>
-                        <button t-on-click="(ev) => this.changeFilter(ev)"
-                                data-filter="custom"
-                                t-att-class="'filter-btn ' + (this.state.filter === 'custom' ? 'active' : '')">
-                            Apply
-                        </button>
-                    </div>
+                <div class="custom-date-filter">
+                    <i class="oi date-icon" data-icon="schedule"/>
+                    <span class="date-label">From</span>
+                    <input type="date" class="date-input"
+                           t-att-value="this.state.custom_date_from"
+                           t-on-change="(ev) => this.onCustomDateFromChange(ev)"/>
+                    <span class="date-label">To</span>
+                    <input type="date" class="date-input"
+                           t-att-value="this.state.custom_date_to"
+                           t-on-change="(ev) => this.onCustomDateToChange(ev)"/>
+                    <button t-on-click="(ev) => this.changeFilter(ev)"
+                            data-filter="custom"
+                            t-att-class="'filter-btn apply-btn ' + (this.state.filter === 'custom' ? 'active' : '')">
+                        Apply
+                    </button>
                 </div>
             </div>
 
             <!-- ================= KPI CARDS ================= -->
             <div class="kpi-grid">
-                <div class="kpi-card kpi-blue">
-                    <div class="kpi-title">Total Sales</div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Total Sales</span>
+                        <div class="kpi-icon kpi-icon-blue">
+                            <i class="oi" data-icon="payments"/>
+                        </div>
+                    </div>
                     <div class="kpi-value">
                         <t t-out="this.state.currency.symbol"/> <t t-out="this.state.sales"/>
                     </div>
-                    <div class="small mt-1" style="opacity: 0.9;">
-                        vs prev period: <strong><t t-out="(this.state.sales_growth &gt;= 0 ? '+' : '') + this.state.sales_growth + '%'"/></strong>
+                    <div class="kpi-sub">
+                        <span t-att-class="'growth-pill ' + (this.state.sales_growth &gt;= 0 ? 'growth-up' : 'growth-down')">
+                            <i class="oi" t-att-data-icon="this.state.sales_growth &gt;= 0 ? 'trending_up' : 'trending_down'"/>
+                            <t t-out="(this.state.sales_growth &gt;= 0 ? '+' : '') + this.state.sales_growth + '%'"/>
+                        </span>
+                        <span class="kpi-muted">vs previous period</span>
                     </div>
                 </div>
 
-                <div class="kpi-card kpi-green">
-                    <div class="kpi-title">Top Product</div>
-                    <div class="kpi-value">
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Top Product</span>
+                        <div class="kpi-icon kpi-icon-green">
+                            <i class="oi" data-icon="inventory_2"/>
+                        </div>
+                    </div>
+                    <div class="kpi-value kpi-value-truncate">
                         <t t-if="this.state.products.length">
                             <t t-out="this.state.products[0][0]"/>
                         </t>
                         <t t-else="">-</t>
                     </div>
+                    <div class="kpi-sub">
+                        <span class="kpi-muted">
+                            <t t-if="this.state.products.length">
+                                <t t-out="this.state.products[0][1]"/> units sold
+                            </t>
+                            <t t-else="">No sales yet</t>
+                        </span>
+                    </div>
                 </div>
 
-                <div class="kpi-card kpi-yellow">
-                    <div class="kpi-title">Active Stores</div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Active Stores</span>
+                        <div class="kpi-icon kpi-icon-amber">
+                            <i class="oi" data-icon="storefront"/>
+                        </div>
+                    </div>
                     <div class="kpi-value">
                         <t t-out="this.state.stores.length"/>
                     </div>
+                    <div class="kpi-sub">
+                        <span class="kpi-muted">
+                            <t t-out="this.state.open_sessions"/> open session(s)
+                        </span>
+                    </div>
                 </div>
 
-                <div class="kpi-card kpi-red">
-                    <div class="kpi-title">Total Orders</div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Total Orders</span>
+                        <div class="kpi-icon kpi-icon-purple">
+                            <i class="oi" data-icon="shopping_bag"/>
+                        </div>
+                    </div>
                     <div class="kpi-value">
                         <t t-out="this.state.total_order_count"/>
                     </div>
-                    <div class="small mt-1" style="opacity: 0.9;">
-                        Avg Basket: <strong><t t-out="this.state.currency.symbol"/> <t t-out="this.state.avg_order_value"/></strong>
+                    <div class="kpi-sub">
+                        <span class="kpi-muted">Avg Basket:</span>
+                        <strong><t t-out="this.state.currency.symbol"/> <t t-out="this.state.avg_order_value"/></strong>
                     </div>
                 </div>
             </div>
@@ -161,102 +219,170 @@
 
                 <!-- SALES TREND LINE CHART -->
                 <div class="data-card">
-                    <div class="data-title">📈 Sales Trend (<t t-out="this.state.filter === 'today' ? 'Hourly' : 'Daily'"/>)</div>
-                    <div class="product-chart-container">
+                    <div class="card-header-row">
+                        <div class="card-title-group">
+                            <span class="card-icon icon-green">
+                                <i class="oi" data-icon="show_chart"/>
+                            </span>
+                            <span class="data-title">
+                                Sales Trend (<t t-out="(this.state.filter === 'today' or this.state.filter === 'yesterday') ? 'Hourly' : 'Daily'"/>)
+                            </span>
+                        </div>
+                    </div>
+                    <div t-if="!this.state.sales_trend.length" class="empty-card-state">
+                        <i class="oi" data-icon="show_chart"/>
+                        <span>No sales trend data for this period</span>
+                    </div>
+                    <div t-att-class="'product-chart-container ' + (!this.state.sales_trend.length ? 'd-none' : '')">
                         <canvas id="salesTrendChart"/>
                     </div>
                 </div>
 
-                <!-- ACTIVE SESSIONS -->
+                <!-- POS SESSIONS -->
                 <div class="data-card">
-                    <div class="data-title">🟢 Active POS Sessions</div>
-                    <table class="modern-table">
-                        <thead>
-                            <tr>
-                                <th>Session</th>
-                                <th>Cashier</th>
-                                <th>Store</th>
-                                <th>Opening Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="this.state.sessions.slice(0,5)" t-as="s" t-key="s.id">
-                                <tr>
-                                    <td><t t-out="s.name"/></td>
-                                    <td><t t-out="s.user"/></td>
-                                    <td><t t-out="s.config"/></td>
-                                    <td><t t-out="s.start_at"/></td>
-                                </tr>
-                            </t>
-                        </tbody>
-                    </table>
-
-                    <div class="session-more" t-if="this.state.sessions.length &gt; 5">
-                        <button class="more-btn" t-on-click="() => this.openSessionPopup()">
-                            View More (<t t-out="this.state.sessions.length - 5"/>)
-                        </button>
+                    <div class="card-header-row">
+                        <div class="card-title-group">
+                            <span class="card-icon icon-blue">
+                                <i class="oi" data-icon="storefront"/>
+                            </span>
+                            <span class="data-title">POS Sessions</span>
+                        </div>
                     </div>
+                    <t t-if="!this.state.sessions.length">
+                        <div class="empty-card-state">
+                            <i class="oi" data-icon="storefront"/>
+                            <span>No POS sessions found</span>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Session</th>
+                                    <th>Cashier</th>
+                                    <th>Store</th>
+                                    <th>Status</th>
+                                    <th>Opened</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="this.state.sessions.slice(0,5)" t-as="s" t-key="s.id">
+                                    <tr>
+                                        <td class="fw-medium"><t t-out="s.name"/></td>
+                                        <td><t t-out="s.user"/></td>
+                                        <td><t t-out="s.config"/></td>
+                                        <td>
+                                            <span t-att-class="'status-pill ' + (s.state === 'opened' ? 'status-open' : 'status-closed')">
+                                                <t t-out="s.state === 'opened' ? 'Open' : 'Closed'"/>
+                                            </span>
+                                        </td>
+                                        <td class="text-muted-cell"><t t-out="s.start_at"/></td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <div class="session-more" t-if="this.state.sessions.length &gt; 5">
+                            <button class="more-btn" t-on-click="() => this.openSessionPopup()">
+                                View More (<t t-out="this.state.sessions.length - 5"/>)
+                            </button>
+                        </div>
+                    </t>
                 </div>
 
                 <!-- STORE SALES COMPARISON -->
                 <t t-if="this.state.filter === 'month' or this.state.filter === 'year'">
                     <div class="data-card">
-                        <div class="data-title">📊 Store Sales Comparison</div>
-                        <div class="product-chart-container">
+                        <div class="card-header-row">
+                            <div class="card-title-group">
+                                <span class="card-icon icon-purple">
+                                    <i class="oi" data-icon="stacked_bar_chart"/>
+                                </span>
+                                <span class="data-title">Store Sales Comparison</span>
+                            </div>
+                        </div>
+                        <div t-if="!this.state.store_comparison.length" class="empty-card-state">
+                            <i class="oi" data-icon="stacked_bar_chart"/>
+                            <span>No store comparison data available</span>
+                        </div>
+                        <div t-att-class="'product-chart-container ' + (!this.state.store_comparison.length ? 'd-none' : '')">
                             <canvas id="storeComparisonChart"/>
                         </div>
                     </div>
                 </t>
 
                 <!-- TOP PRODUCTS -->
-                <div class="data-card glass-card">
-                    <div class="data-title top-product-header">
-                        <span>🔥 Top Selling Products</span>
-                        <t t-if="!this.state.showProductChart">
-                            <input type="text"
-                                   class="product-search"
-                                   placeholder="Search product..."
-                                   t-on-input="(ev) => this.onProductSearch(ev)"/>
-                        </t>
-                        <button class="chart-toggle-btn" t-on-click="() => this.toggleProductChart()">
-                            <t t-if="this.state.showProductChart">
-                                <i class="oi" data-icon="list" title="Show List View"/>
+                <div class="data-card">
+                    <div class="card-header-row">
+                        <div class="card-title-group">
+                            <span class="card-icon icon-amber">
+                                <i class="oi" data-icon="shopping_bag"/>
+                            </span>
+                            <span class="data-title">Top Selling Products</span>
+                        </div>
+                        <div class="card-controls">
+                            <t t-if="!this.state.showProductChart">
+                                <div class="search-box">
+                                    <i class="oi search-icon" data-icon="search"/>
+                                    <input type="text"
+                                           class="product-search"
+                                           placeholder="Search..."
+                                           t-on-input="(ev) => this.onProductSearch(ev)"/>
+                                </div>
                             </t>
-                            <t t-else="">
-                                <i class="oi" data-icon="bar_chart" title="Show Bar Chart"/>
-                            </t>
-                        </button>
+                            <button class="chart-toggle-btn" title="Toggle Chart / Table" t-on-click="() => this.toggleProductChart()">
+                                <t t-if="this.state.showProductChart">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                                        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                                    </svg>
+                                </t>
+                                <t t-else="">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                                    </svg>
+                                </t>
+                            </button>
+                        </div>
                     </div>
 
                     <t t-if="!this.state.showProductChart">
-                        <table class="modern-table">
-                            <thead>
-                                <tr>
-                                    <th>Product</th>
-                                    <th>Qty</th>
-                                    <th>History</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-foreach="this.state.filtered_products.slice(0,5)" t-as="p" t-key="p[2]">
+                        <t t-if="!this.state.filtered_products.length">
+                            <div class="empty-card-state">
+                                <i class="oi" data-icon="shopping_bag"/>
+                                <span>No products sold in this period</span>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <table class="modern-table">
+                                <thead>
                                     <tr>
-                                        <td><t t-out="p[0]"/></td>
-                                        <td>
-                                            <span class="qty-pill">
-                                                <t t-out="p[1]"/>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <button class="view-btn"
-                                                    t-on-click="(ev) => this.openProductDetails(ev)"
-                                                    t-att-data-product="p[2]">
-                                                View
-                                            </button>
-                                        </td>
+                                        <th>Product</th>
+                                        <th>Qty</th>
+                                        <th>History</th>
                                     </tr>
-                                </t>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <t t-foreach="this.state.filtered_products.slice(0,5)" t-as="p" t-key="p[2]">
+                                        <tr>
+                                            <td class="fw-medium"><t t-out="p[0]"/></td>
+                                            <td>
+                                                <span class="qty-pill">
+                                                    <t t-out="p[1]"/>
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="view-btn"
+                                                        t-on-click="(ev) => this.openProductDetails(ev)"
+                                                        t-att-data-product="p[2]">
+                                                    View
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </t>
                     </t>
 
                     <t t-if="this.state.showProductChart">
@@ -276,43 +402,61 @@
 
                 <!-- STORE PERFORMANCE -->
                 <div class="data-card">
-                    <div class="data-title top-product-header">
-                        <span>📊 Store Performance</span>
-                        <button class="chart-toggle-btn" t-on-click="() => this.toggleStoreChart()">
+                    <div class="card-header-row">
+                        <div class="card-title-group">
+                            <span class="card-icon icon-blue">
+                                <i class="oi" data-icon="stacked_bar_chart"/>
+                            </span>
+                            <span class="data-title">Store Performance</span>
+                        </div>
+                        <button class="chart-toggle-btn" title="Toggle Chart / Table" t-on-click="() => this.toggleStoreChart()">
                             <t t-if="this.state.showStoreChart">
-                                <i class="oi" data-icon="list" title="Show List View"/>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                                </svg>
                             </t>
                             <t t-else="">
-                                <i class="oi" data-icon="pie_chart" title="Show Pie Chart"/>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>
+                                </svg>
                             </t>
                         </button>
                     </div>
 
                     <t t-if="!this.state.showStoreChart">
-                        <table class="modern-table">
-                            <thead>
-                                <tr>
-                                    <th>Rank</th>
-                                    <th>Store</th>
-                                    <th>Orders</th>
-                                    <th>Sales</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <t t-set="rank" t-value="1"/>
-                                <t t-foreach="this.state.stores.slice(0,6)" t-as="s" t-key="s[0]">
+                        <t t-if="!this.state.stores.length">
+                            <div class="empty-card-state">
+                                <i class="oi" data-icon="storefront"/>
+                                <span>No store sales in this period</span>
+                            </div>
+                        </t>
+                        <t t-else="">
+                            <table class="modern-table">
+                                <thead>
                                     <tr>
-                                        <td><t t-out="rank"/></td>
-                                        <td><t t-out="s[0]"/></td>
-                                        <td><t t-out="s[1]"/> Orders</td>
-                                        <td class="sales-value">
-                                            <t t-out="this.state.currency.symbol"/> <t t-out="s[2]"/>
-                                        </td>
+                                        <th>Rank</th>
+                                        <th>Store</th>
+                                        <th>Orders</th>
+                                        <th>Sales</th>
                                     </tr>
-                                    <t t-set="rank" t-value="rank + 1"/>
-                                </t>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <t t-set="rank" t-value="1"/>
+                                    <t t-foreach="this.state.stores.slice(0,5)" t-as="s" t-key="s[0]">
+                                        <tr>
+                                            <td><span class="rank-pill"><t t-out="rank"/></span></td>
+                                            <td class="fw-medium"><t t-out="s[0]"/></td>
+                                            <td><t t-out="s[1]"/> Orders</td>
+                                            <td class="sales-value">
+                                                <t t-out="this.state.currency.symbol"/> <t t-out="s[2]"/>
+                                            </td>
+                                        </tr>
+                                        <t t-set="rank" t-value="rank + 1"/>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </t>
                     </t>
 
                     <t t-if="this.state.showStoreChart">
@@ -322,21 +466,20 @@
                     </t>
 
                     <t t-if="!this.state.showStoreChart">
-                        <div class="session-more" t-if="this.state.stores.length &gt; 3">
+                        <div class="session-more" t-if="this.state.stores.length &gt; 5">
                             <button class="more-btn" t-on-click="() => this.openStorePopup()">
-                                View More (<t t-out="this.state.stores.length - 3"/>)
+                                View More (<t t-out="this.state.stores.length - 5"/>)
                             </button>
                         </div>
                     </t>
 
-                    <div class="payment-summary">
+                    <div class="payment-summary" t-if="this.state.payments.length">
                         <div class="payment-title">Payment Methods</div>
                         <div class="payment-methods">
                             <t t-foreach="this.state.payments" t-as="p" t-key="p[0]">
                                 <div class="payment-pill">
                                     <span class="payment-icon">
-                                        <i class="oi"
-                                           t-att-data-icon="p[0].toLowerCase() === 'cash' ? 'payments' : (p[0].toLowerCase() === 'card' ? 'credit_card' : 'account_balance_wallet')"/>
+                                        <i class="oi" data-icon="payments"/>
                                     </span>
                                     <span class="payment-name">
                                         <t t-out="p[0]"/>
@@ -352,119 +495,171 @@
 
                 <!-- TOP CUSTOMERS -->
                 <div class="data-card">
-                    <div class="data-title">⭐ Top Customers</div>
-                    <table class="modern-table">
-                        <thead>
-                            <tr>
-                                <th>Customer</th>
-                                <th>Sales</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="this.state.customers.slice(0,5)" t-as="c" t-key="c[0]">
-                                <tr>
-                                    <td style="display:flex; align-items:center; gap:10px;">
-                                        <div class="customer-img-wrapper">
-                                            <img t-att-src="'/web/image/res.partner/' + c[0] + '/image_128'" class="customer-avatar"/>
-                                            <img t-att-src="'/web/image/res.partner/' + c[0] + '/image_128'" class="customer-zoom"/>
-                                        </div>
-                                        <span><t t-out="c[1]"/></span>
-                                    </td>
-                                    <td class="sales-value">
-                                        <t t-out="this.state.currency.symbol"/> <t t-out="c[2]"/>
-                                    </td>
-                                </tr>
-                            </t>
-                        </tbody>
-                    </table>
-
-                    <div class="session-more" t-if="this.state.customers.length &gt; 5">
-                        <button class="more-btn" t-on-click="() => this.openCustomerPopup()">
-                            View More (<t t-out="this.state.customers.length - 5"/>)
-                        </button>
+                    <div class="card-header-row">
+                        <div class="card-title-group">
+                            <span class="card-icon icon-purple">
+                                <i class="oi" data-icon="group"/>
+                            </span>
+                            <span class="data-title">Top Customers</span>
+                        </div>
                     </div>
+                    <t t-if="!this.state.customers.length">
+                        <div class="empty-card-state">
+                            <i class="oi" data-icon="group"/>
+                            <span>No customer sales in this period</span>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <table class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Customer</th>
+                                    <th>Sales</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="this.state.customers.slice(0,5)" t-as="c" t-key="c[0]">
+                                    <tr>
+                                        <td>
+                                            <div class="person-cell">
+                                                <t t-if="c[0]">
+                                                    <div class="customer-img-wrapper">
+                                                        <img t-att-src="'/web/image/res.partner/' + c[0] + '/image_128'" class="customer-avatar"/>
+                                                        <img t-att-src="'/web/image/res.partner/' + c[0] + '/image_128'" class="customer-zoom"/>
+                                                    </div>
+                                                </t>
+                                                <t t-else="">
+                                                    <div class="walkin-avatar">
+                                                        <i class="oi" data-icon="group"/>
+                                                    </div>
+                                                </t>
+                                                <span class="fw-medium"><t t-out="c[1]"/></span>
+                                            </div>
+                                        </td>
+                                        <td class="sales-value">
+                                            <t t-out="this.state.currency.symbol"/> <t t-out="c[2]"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+
+                        <div class="session-more" t-if="this.state.customers.length &gt; 5">
+                            <button class="more-btn" t-on-click="() => this.openCustomerPopup()">
+                                View More (<t t-out="this.state.customers.length - 5"/>)
+                            </button>
+                        </div>
+                    </t>
                 </div>
 
                 <!-- TOP CATEGORIES -->
                 <div class="data-card">
-                    <div class="top-product-header">
-                        <div class="data-title">📦 Top POS Product Categories</div>
+                    <div class="card-header-row">
+                        <div class="card-title-group">
+                            <span class="card-icon icon-green">
+                                <i class="oi" data-icon="inventory_2"/>
+                            </span>
+                            <span class="data-title">Top POS Categories</span>
+                        </div>
                     </div>
-                    <table class="modern-table">
-                        <thead>
-                            <tr>
-                                <th>Category</th>
-                                <th>Qty</th>
-                                <th>History</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="this.state.categories.slice(0,5)" t-as="cat" t-key="cat.id">
+                    <t t-if="!this.state.categories.length">
+                        <div class="empty-card-state">
+                            <i class="oi" data-icon="inventory_2"/>
+                            <span>No category sales in this period</span>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <table class="modern-table">
+                            <thead>
                                 <tr>
-                                    <td><t t-out="cat.name"/></td>
-                                    <td>
-                                        <span class="qty-pill">
-                                            <t t-out="cat.qty"/>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button class="view-btn"
-                                                t-on-click="(ev) => this.openCategoryProducts(ev)"
-                                                t-att-data-category="cat.id">
-                                            View
-                                        </button>
-                                    </td>
+                                    <th>Category</th>
+                                    <th>Qty</th>
+                                    <th>Products</th>
                                 </tr>
-                            </t>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="this.state.categories.slice(0,5)" t-as="cat" t-key="cat.id">
+                                    <tr>
+                                        <td class="fw-medium"><t t-out="cat.name"/></td>
+                                        <td>
+                                            <span class="qty-pill">
+                                                <t t-out="cat.qty"/>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="view-btn"
+                                                    t-on-click="(ev) => this.openCategoryProducts(ev)"
+                                                    t-att-data-category="cat.id">
+                                                View
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
 
-                    <div class="session-more" t-if="this.state.categories and this.state.categories.length &gt; 5">
-                        <button class="more-btn" t-on-click="() => this.openCategoryPopup()">
-                            View More (<t t-out="this.state.categories.length - 5"/>)
-                        </button>
-                    </div>
+                        <div class="session-more" t-if="this.state.categories and this.state.categories.length &gt; 5">
+                            <button class="more-btn" t-on-click="() => this.openCategoryPopup()">
+                                View More (<t t-out="this.state.categories.length - 5"/>)
+                            </button>
+                        </div>
+                    </t>
                 </div>
 
                 <!-- TOP CASHIERS -->
                 <div class="data-card">
-                    <div class="data-title top-product-header">
-                        <span>👨‍💼 Top Cashiers</span>
+                    <div class="card-header-row">
+                        <div class="card-title-group">
+                            <span class="card-icon icon-amber">
+                                <i class="oi" data-icon="badge"/>
+                            </span>
+                            <span class="data-title">Top Cashiers</span>
+                        </div>
                     </div>
-                    <table class="modern-table">
-                        <thead>
-                            <tr>
-                                <th>Rank</th>
-                                <th>Cashier</th>
-                                <th>Orders</th>
-                                <th>Sales</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <t t-foreach="this.state.top_cashiers.slice(0,5)" t-as="c" t-key="c.id">
+                    <t t-if="!this.state.top_cashiers.length">
+                        <div class="empty-card-state">
+                            <i class="oi" data-icon="badge"/>
+                            <span>No cashier activity in this period</span>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <table class="modern-table">
+                            <thead>
                                 <tr>
-                                    <td><t t-out="c.rank"/></td>
-                                    <td style="display:flex; align-items:center; gap:10px;">
-                                        <div class="customer-img-wrapper">
-                                            <img t-att-src="'/web/image/' + (c.model || 'hr.employee') + '/' + c.id + '/image_128'" class="customer-avatar"/>
-                                            <img t-att-src="'/web/image/' + (c.model || 'hr.employee') + '/' + c.id + '/image_128'" class="customer-zoom"/>
-                                        </div>
-                                        <span><t t-out="c.name"/></span>
-                                    </td>
-                                    <td><t t-out="c.orders"/> Orders</td>
-                                    <td class="sales-value">
-                                        <t t-out="this.state.currency.symbol"/> <t t-out="c.sales"/>
-                                    </td>
+                                    <th>Rank</th>
+                                    <th>Cashier</th>
+                                    <th>Orders</th>
+                                    <th>Sales</th>
                                 </tr>
-                            </t>
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                <t t-foreach="this.state.top_cashiers.slice(0,5)" t-as="c" t-key="c.id">
+                                    <tr>
+                                        <td><span class="rank-pill"><t t-out="c.rank"/></span></td>
+                                        <td>
+                                            <div class="person-cell">
+                                                <div class="customer-img-wrapper">
+                                                    <img t-att-src="'/web/image/' + (c.model || 'hr.employee') + '/' + c.id + '/image_128'" class="customer-avatar"/>
+                                                    <img t-att-src="'/web/image/' + (c.model || 'hr.employee') + '/' + c.id + '/image_128'" class="customer-zoom"/>
+                                                </div>
+                                                <span class="fw-medium"><t t-out="c.name"/></span>
+                                            </div>
+                                        </td>
+                                        <td><t t-out="c.orders"/> Orders</td>
+                                        <td class="sales-value">
+                                            <t t-out="this.state.currency.symbol"/> <t t-out="c.sales"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
 
-                    <div class="session-more" t-if="this.state.top_cashiers.length &gt; 5">
-                        <button class="more-btn" t-on-click="() => this.openCashierPopup()">
-                            View More (<t t-out="this.state.top_cashiers.length - 5"/>)
-                        </button>
-                    </div>
+                        <div class="session-more" t-if="this.state.top_cashiers.length &gt; 5">
+                            <button class="more-btn" t-on-click="() => this.openCashierPopup()">
+                                View More (<t t-out="this.state.top_cashiers.length - 5"/>)
+                            </button>
+                        </div>
+                    </t>
                 </div>
             </div>
 
@@ -500,7 +695,7 @@
                 <div class="session-popup-overlay" t-on-click="() => this.closeSessionPopup()">
                     <div class="session-popup" t-on-click.stop="">
                         <div class="popup-header">
-                            <span>All Active Sessions</span>
+                            <span>All POS Sessions</span>
                             <button class="popup-close" t-on-click="() => this.closeSessionPopup()">✕</button>
                         </div>
                         <table class="modern-table">
@@ -509,7 +704,8 @@
                                     <th>Session</th>
                                     <th>Cashier</th>
                                     <th>Store</th>
-                                    <th>Opening Date</th>
+                                    <th>Status</th>
+                                    <th>Opened</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -518,6 +714,11 @@
                                         <td><t t-out="s.name"/></td>
                                         <td><t t-out="s.user"/></td>
                                         <td><t t-out="s.config"/></td>
+                                        <td>
+                                            <span t-att-class="'status-pill ' + (s.state === 'opened' ? 'status-open' : 'status-closed')">
+                                                <t t-out="s.state === 'opened' ? 'Open' : 'Closed'"/>
+                                            </span>
+                                        </td>
                                         <td><t t-out="s.start_at"/></td>
                                     </tr>
                                 </t>
@@ -577,10 +778,10 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <t t-set="rank" t-value="4"/>
-                                <t t-foreach="this.state.stores.slice(3)" t-as="s" t-key="s[0]">
+                                <t t-set="rank" t-value="6"/>
+                                <t t-foreach="this.state.stores.slice(5)" t-as="s" t-key="s[0]">
                                     <tr>
-                                        <td><t t-out="rank"/></td>
+                                        <td><span class="rank-pill"><t t-out="rank"/></span></td>
                                         <td><t t-out="s[0]"/></td>
                                         <td><t t-out="s[1]"/> Orders</td>
                                         <td class="sales-value"><t t-out="this.state.currency.symbol"/> <t t-out="s[2]"/></td>
@@ -664,12 +865,21 @@
                             <tbody>
                                 <t t-foreach="this.state.customers.slice(5)" t-as="c" t-key="c[0]">
                                     <tr>
-                                        <td style="display:flex; align-items:center; gap:10px;">
-                                            <div class="customer-img-wrapper">
-                                                <img t-att-src="'/web/image/res.partner/' + c[0] + '/image_128'" class="customer-avatar"/>
-                                                <img t-att-src="'/web/image/res.partner/' + c[0] + '/image_128'" class="customer-zoom"/>
+                                        <td>
+                                            <div class="person-cell">
+                                                <t t-if="c[0]">
+                                                    <div class="customer-img-wrapper">
+                                                        <img t-att-src="'/web/image/res.partner/' + c[0] + '/image_128'" class="customer-avatar"/>
+                                                        <img t-att-src="'/web/image/res.partner/' + c[0] + '/image_128'" class="customer-zoom"/>
+                                                    </div>
+                                                </t>
+                                                <t t-else="">
+                                                    <div class="walkin-avatar">
+                                                        <i class="oi" data-icon="group"/>
+                                                    </div>
+                                                </t>
+                                                <span><t t-out="c[1]"/></span>
                                             </div>
-                                            <span><t t-out="c[1]"/></span>
                                         </td>
                                         <td class="sales-value"><t t-out="this.state.currency.symbol"/> <t t-out="c[2]"/></td>
                                     </tr>
@@ -699,7 +909,7 @@
                             <tbody>
                                 <t t-foreach="this.state.top_cashiers.slice(5)" t-as="c" t-key="c.id">
                                     <tr>
-                                        <td><t t-out="c.rank"/></td>
+                                        <td><span class="rank-pill"><t t-out="c.rank"/></span></td>
                                         <td><t t-out="c.name"/></td>
                                         <td><t t-out="c.orders"/></td>
                                         <td class="sales-value"><t t-out="this.state.currency.symbol"/> <t t-out="c.sales"/></td>

@@ -11,6 +11,10 @@ class PosDashboard(models.Model):
         if filter_type == "today":
             date_from = today.date()
             date_to = today.date()
+        elif filter_type == "yesterday":
+            yesterday = (today - timedelta(days=1)).date()
+            date_from = yesterday
+            date_to = yesterday
         elif filter_type == "week":
             date_from = (today - timedelta(days=6)).date()
             date_to = today.date()
@@ -187,16 +191,15 @@ class PosDashboard(models.Model):
         ]
 
         # ---------------------------------------------------------
-        # TOP CUSTOMERS
+        # TOP CUSTOMERS (Includes Walk-in Customer fallback)
         # ---------------------------------------------------------
         customer_query = """
-            SELECT rp.id,
-                   rp.name,
+            SELECT COALESCE(rp.id, 0) AS partner_id,
+                   COALESCE(rp.name, 'Walk-in Customer') AS partner_name,
                    COALESCE(SUM(po.amount_total), 0) AS total
             FROM pos_order po
-            JOIN res_partner rp ON po.partner_id = rp.id
-            WHERE po.partner_id IS NOT NULL
-              AND po.date_order >= %s
+            LEFT JOIN res_partner rp ON po.partner_id = rp.id
+            WHERE po.date_order >= %s
               AND po.date_order <= %s
               AND po.company_id = %s
               AND po.state IN ('paid', 'done', 'invoiced')
@@ -207,7 +210,7 @@ class PosDashboard(models.Model):
             params.append(int(config_id))
 
         customer_query += """
-            GROUP BY rp.id, rp.name
+            GROUP BY COALESCE(rp.id, 0), COALESCE(rp.name, 'Walk-in Customer')
             ORDER BY total DESC
             LIMIT 10
         """
@@ -228,21 +231,29 @@ class PosDashboard(models.Model):
 
         open_session_domain = [('state', '=', 'opened'), ('company_id', '=', company_id)]
         closed_session_domain = [('state', '=', 'closed'), ('company_id', '=', company_id)]
+        session_domain = [('company_id', '=', company_id)]
         if config_id:
             open_session_domain.append(('config_id', '=', int(config_id)))
             closed_session_domain.append(('config_id', '=', int(config_id)))
+            session_domain.append(('config_id', '=', int(config_id)))
 
         open_sessions = self.env['pos.session'].search_count(open_session_domain)
         closed_sessions = self.env['pos.session'].search_count(closed_session_domain)
 
-        sessions = self.env['pos.session'].search(open_session_domain)
+        # Show open sessions first, followed by recent sessions so the card is populated
+        sessions = self.env['pos.session'].search(
+            session_domain,
+            order="state desc, start_at desc, id desc",
+            limit=10,
+        )
         session_data = [{
             "id": s.id,
-            "name": s.config_id.name,
+            "name": s.name,
             "session": s.name,
             "user": s.user_id.name,
             "config": s.config_id.name,
             "start_at": s.start_at.strftime("%Y-%m-%d %H:%M") if s.start_at else "",
+            "state": s.state,
         } for s in sessions]
 
         currency = self.env.company.currency_id
@@ -404,9 +415,9 @@ class PosDashboard(models.Model):
             })
 
         # ---------------------------------------------------------
-        # SALES TREND (HOURLY FOR TODAY, DAILY OTHERWISE)
+        # SALES TREND (HOURLY FOR TODAY & YESTERDAY, DAILY OTHERWISE)
         # ---------------------------------------------------------
-        if filter_type == "today":
+        if filter_type in ("today", "yesterday"):
             trend_query = """
                 SELECT TO_CHAR(po.date_order, 'HH24:00') AS bucket,
                        COALESCE(SUM(po.amount_total), 0) AS total
@@ -442,7 +453,7 @@ class PosDashboard(models.Model):
         # ---------------------------------------------------------
         today_date = datetime.today().date()
         param_key = f"pos_dashboard_last_seen_{user.id}"
-        last_seen_id = int(self.env['ir.config_parameter'].sudo().get_param(param_key, 0))
+        last_seen_id = self.env['ir.config_parameter'].sudo().get_int(param_key) or 0
 
         notification_query = """
             SELECT id, name, ROUND(CAST(amount_total AS numeric), 2)
@@ -536,7 +547,7 @@ class PosDashboard(models.Model):
             limit=1,
         )
         param_key = f"pos_dashboard_last_seen_{user.id}"
-        self.env['ir.config_parameter'].sudo().set_param(
+        self.env['ir.config_parameter'].sudo().set_int(
             param_key,
             last_order.id if last_order else 0,
         )

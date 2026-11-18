@@ -144,7 +144,13 @@ class PosDashboard extends Component {
     await this.loadDashboard();
   }
 
-  onCustomDateChange() {}
+  onCustomDateFromChange(ev) {
+    this.state.custom_date_from = ev.target.value;
+  }
+
+  onCustomDateToChange(ev) {
+    this.state.custom_date_to = ev.target.value;
+  }
 
   async changeConfig(ev) {
     const value = ev.target.value;
@@ -302,6 +308,8 @@ class PosDashboard extends Component {
     }
     const labels = this.state.sales_trend.map((t) => t.label);
     const values = this.state.sales_trend.map((t) => t.sales);
+    const tickColor = this.state.dark_mode ? "#94a3b8" : "#64748b";
+    const gridColor = this.state.dark_mode ? "#334155" : "#e2e8f0";
 
     this.salesTrendChart = new Chart(ctx, {
       type: "line",
@@ -311,10 +319,11 @@ class PosDashboard extends Component {
           {
             label: "Sales",
             data: values,
-            borderColor: "#1cc88a",
-            backgroundColor: "rgba(28, 200, 138, 0.15)",
+            borderColor: "#4f46e5",
+            backgroundColor: "rgba(79, 70, 229, 0.12)",
             fill: true,
             tension: 0.35,
+            pointRadius: 3,
           },
         ],
       },
@@ -324,13 +333,13 @@ class PosDashboard extends Component {
         plugins: { legend: { display: false } },
         scales: {
           x: {
-            ticks: { color: this.state.dark_mode ? "#e5e7eb" : "#333" },
+            ticks: { color: tickColor },
             grid: { display: false },
           },
           y: {
             beginAtZero: true,
-            ticks: { color: this.state.dark_mode ? "#e5e7eb" : "#333" },
-            grid: { color: this.state.dark_mode ? "#334155" : "#e5e7eb" },
+            ticks: { color: tickColor },
+            grid: { color: gridColor },
           },
         },
       },
@@ -348,6 +357,8 @@ class PosDashboard extends Component {
     const labels = products.map((p) => p[0]);
     const qtyValues = products.map((p) => p[1]);
     const amountValues = products.map((p) => p[3] || 0);
+    const tickColor = this.state.dark_mode ? "#94a3b8" : "#64748b";
+    const gridColor = this.state.dark_mode ? "#334155" : "#e2e8f0";
 
     this.productChart = new Chart(ctx, {
       type: "bar",
@@ -358,14 +369,14 @@ class PosDashboard extends Component {
             label: "Qty Sold",
             data: qtyValues,
             backgroundColor: [
-              "#4e73df",
-              "#1cc88a",
-              "#f6c23e",
-              "#e74a3b",
-              "#36b9cc",
+              "#4f46e5",
+              "#10b981",
+              "#f59e0b",
+              "#8b5cf6",
+              "#0ea5e9",
             ],
             borderRadius: 6,
-            barPercentage: 0.6,
+            barPercentage: 0.55,
             categoryPercentage: 0.6,
           },
         ],
@@ -393,22 +404,22 @@ class PosDashboard extends Component {
         scales: {
           x: {
             ticks: {
-              color: this.state.dark_mode ? "#e5e7eb" : "#333",
+              color: tickColor,
               autoSkip: false,
-              maxRotation: 45,
-              minRotation: 30,
-              font: { size: 10 },
+              maxRotation: 35,
+              minRotation: 20,
+              font: { size: 11 },
             },
             grid: { display: false },
           },
           y: {
             beginAtZero: true,
             ticks: {
-              color: this.state.dark_mode ? "#e5e7eb" : "#333",
-              font: { size: 10 },
+              color: tickColor,
+              font: { size: 11 },
             },
             grid: {
-              color: this.state.dark_mode ? "#334155" : "#e5e7eb",
+              color: gridColor,
             },
           },
         },
@@ -428,21 +439,21 @@ class PosDashboard extends Component {
     const values = stores.map((s) => s[2]);
 
     this.storeChart = new Chart(ctx, {
-      type: "pie",
+      type: "doughnut",
       data: {
         labels,
         datasets: [
           {
             data: values,
             backgroundColor: [
-              "#4e73df",
-              "#1cc88a",
-              "#f6c23e",
-              "#e74a3b",
-              "#36b9cc",
+              "#4f46e5",
+              "#10b981",
+              "#f59e0b",
+              "#8b5cf6",
+              "#0ea5e9",
             ],
-            borderWidth: 1,
-            borderColor: this.state.dark_mode ? "#0f172a" : "#ffffff",
+            borderWidth: 2,
+            borderColor: this.state.dark_mode ? "#1e293b" : "#ffffff",
           },
         ],
       },
@@ -453,7 +464,7 @@ class PosDashboard extends Component {
           legend: {
             position: "bottom",
             labels: {
-              color: this.state.dark_mode ? "#e5e7eb" : "#333",
+              color: this.state.dark_mode ? "#cbd5e1" : "#475569",
               font: { size: 12 },
             },
           },
@@ -479,6 +490,8 @@ class PosDashboard extends Component {
     const labels = data.map((s) => s.store);
     const current = data.map((s) => s.current);
     const previous = data.map((s) => s.previous);
+    const tickColor = this.state.dark_mode ? "#94a3b8" : "#64748b";
+    const gridColor = this.state.dark_mode ? "#334155" : "#e2e8f0";
 
     this.storeComparisonChart = new Chart(ctx, {
       type: "bar",
@@ -488,20 +501,37 @@ class PosDashboard extends Component {
           {
             label: "Current Period",
             data: current,
-            backgroundColor: "#4e73df",
+            backgroundColor: "#4f46e5",
+            borderRadius: 5,
           },
           {
             label: "Previous Period",
             data: previous,
-            backgroundColor: "#f59e0b",
+            backgroundColor: "#94a3b8",
+            borderRadius: 5,
           },
         ],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { position: "bottom" } },
-        scales: { y: { beginAtZero: true } },
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { color: tickColor },
+          },
+        },
+        scales: {
+          x: {
+            ticks: { color: tickColor },
+            grid: { display: false },
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: tickColor },
+            grid: { color: gridColor },
+          },
+        },
       },
     });
   }
